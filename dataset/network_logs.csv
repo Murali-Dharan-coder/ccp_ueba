@@ -1,0 +1,5 @@
+user_id,url,data_usage_mb,wifi_name,timestamp
+u03,https://youtube.com,120,Public_WiFi,2026-01-01 12:30
+u03,https://torrent-site.com,300,Public_WiFi,2026-01-01 12:45
+u03,https://college.edu,20,Office_WiFi,2026-01-01 13:00
+u05,https://internal.company.com,15,Office_WiFi,2026-01-01 13:10

@@ -2,18 +2,8 @@ package com.company.ueba.service.access;
 
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Set;
-
 @Service
 public class AccessControlService {
-
-    // Role → allowed resources mapping
-    private static final Map<String, Set<String>> ROLE_ACCESS_MAP = Map.of(
-            "STUDENT", Set.of("/notes", "/assignments"),
-            "STAFF", Set.of("/notes", "/assignments", "/marks"),
-            "ADMIN", Set.of("*") // wildcard = all access
-    );
 
     public boolean isAccessAllowed(String role, String resource) {
 
@@ -21,17 +11,21 @@ public class AccessControlService {
             return false;
         }
 
-        Set<String> allowedResources = ROLE_ACCESS_MAP.get(role.toUpperCase());
-
-        if (allowedResources == null) {
-            return false;
+        // STUDENT permissions
+        if (role.equalsIgnoreCase("STUDENT")) {
+            return resource.equals("/marks");
         }
 
-        // Admin wildcard access
-        if (allowedResources.contains("*")) {
-            return true;
+        // STAFF permissions
+        if (role.equalsIgnoreCase("STAFF")) {
+            return resource.equals("/marks");
         }
 
-        return allowedResources.contains(resource);
+        // ADMIN permissions
+        if (role.equalsIgnoreCase("ADMIN")) {
+            return true; // admin can access all
+        }
+
+        return false;
     }
 }

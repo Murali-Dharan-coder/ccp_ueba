@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOC Admin Access | UEBA SHIELD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #020617;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Matrix rain canvas */
+        #matrixCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* Mesh grid overlay */
+        .mesh-overlay {
+            position: fixed; inset: 0; z-index: 1;
+            background-image:
+                linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        /* Center panel */
+        .login-wrapper {
+            position: relative; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100vh;
+        }
+
+        /* Left — branding column */
+        .brand-col {
+            flex: 1; max-width: 420px;
+            padding: 3rem;
+            display: flex; flex-direction: column; justify-content: center;
+            border-right: 1px solid rgba(59,130,246,0.1);
+            height: 100vh;
+        }
+
+        .brand-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; color: #3b82f6;
+            letter-spacing: 0.15em; text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .brand-title {
+            font-size: 3rem; font-weight: 800; line-height: 1.1;
+            background: linear-gradient(135deg, #f1f5f9 0%, #3b82f6 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-sub {
+            font-size: 0.85rem; color: #475569; line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .feature-pills {
+            display: flex; flex-direction: column; gap: 10px; margin-top: 1.5rem;
+        }
+        .feature-pill {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            background: rgba(59,130,246,0.06);
+            border: 1px solid rgba(59,130,246,0.12);
+        }
+        .feature-pill i { color: #3b82f6; width: 16px; text-align: center; }
+        .feature-pill span { font-size: 0.82rem; color: #94a3b8; }
+
+        .status-bar {
+            margin-top: auto; padding-top: 2rem;
+            display: flex; gap: 16px; flex-wrap: wrap;
+        }
+        .status-chip {
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; color: #10b981;
+        }
+        .status-dot { width:6px;height:6px;border-radius:50%;background:#10b981;animation:sdPulse 1.5s infinite; }
+        @keyframes sdPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+        /* Right — login card */
+        .login-col {
+            flex: 0 0 420px;
+            padding: 3rem;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .login-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59,130,246,0.15);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute; top: 0; left: 10%; right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+        }
+
+        /* Scan line animation on card */
+        .login-card::after {
+            content: '';
+            position: absolute; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(59,130,246,0.25), transparent);
+            animation: scanDown 4s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scanDown { 0%{top:-2px;} 100%{top:100%;} }
+
+        .login-header-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: #3b82f6;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-title { font-size: 1.5rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.3rem; }
+        .login-sub { font-size: 0.82rem; color: #475569; margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace; }
+
+        .field-label {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+            color: #64748b; text-transform: uppercase; margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cyber-input {
+            width: 100%; padding: 0.85rem 1rem;
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: #f1f5f9; font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .cyber-input:focus {
+            border-color: rgba(59,130,246,0.5);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .cyber-input::placeholder { color: #334155; }
+        .mb-field { margin-bottom: 1.2rem; }
+
+        .btn-login {
+            width: 100%; padding: 0.9rem;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none; border-radius: 12px;
+            color: #fff; font-weight: 700; font-size: 0.95rem;
+            cursor: pointer; margin-top: 0.5rem;
+            transition: all 0.25s;
+            position: relative; overflow: hidden;
+        }
+        .btn-login::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(59,130,246,0.4); }
+        .btn-login:hover::before { opacity: 1; }
+        .btn-login:active { transform: translateY(0); }
+
+        .error-msg {
+            color: #fca5a5; font-size: 0.8rem; text-align: center;
+            margin-top: 0.8rem; display: none;
+            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px; padding: 8px;
+        }
+
+        /* Typing cursor for the terminal text */
+        .typing-cursor::after { content: '|'; animation: blink 0.7s step-end infinite; color: #3b82f6; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas"></canvas>
+    <div class="mesh-overlay"></div>
+
+    <div class="login-wrapper">
+        <!-- Branding -->
+        <div class="brand-col">
+            <div class="brand-tag">UEBA SHIELD · SOC Edition</div>
+            <div class="brand-title">Hybrid<br>UEBA</div>
+            <div class="brand-sub">
+                AI-powered User &amp; Entity Behavior Analytics for enterprise threat detection and insider risk management.
+            </div>
+
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:#334155;margin-bottom:1rem;" id="typingText" class="typing-cursor"></div>
+
+            <div class="feature-pills">
+                <div class="feature-pill"><i class="fas fa-brain"></i><span>12 UEBA Rule Engine — Java-ported detection</span></div>
+                <div class="feature-pill"><i class="fas fa-satellite-dish"></i><span>Real-time SSE push — Zero polling overhead</span></div>
+                <div class="feature-pill"><i class="fas fa-map-marked-alt"></i><span>Geo threat-origin mapping + SOC terminal</span></div>
+                <div class="feature-pill"><i class="fas fa-file-contract"></i><span>Auto PDF behavioral intelligence reports</span></div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-chip"><div class="status-dot"></div>Rule Engine</div>
+                <div class="status-chip"><div class="status-dot"></div>ML Service</div>
+                <div class="status-chip"><div class="status-dot"></div>SSE Bus</div>
+            </div>
+        </div>
+
+        <!-- Login -->
+        <div class="login-col">
+            <div class="login-card">
+                <div class="login-header-icon"><i class="fas fa-terminal"></i></div>
+                <div class="login-title">SOC Admin Access</div>
+                <div class="login-sub">Authenticated entry · Encrypted channel</div>
+
+                <form id="loginForm" autocomplete="off">
+                    <div class="mb-field">
+                        <div class="field-label">Admin PIN</div>
+                        <input type="password" id="adminPin" class="cyber-input" placeholder="Enter 6-digit PIN" maxlength="6" required>
+                    </div>
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-shield-halved me-2"></i>Authenticate &amp; Enter
+                    </button>
+                    <div class="error-msg" id="loginError">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Access denied — invalid credentials
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+    <script>
+        // ── Matrix Rain ──────────────────────────────────────────
+        (function() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            let W, H, cols, drops;
+
+            function resize() {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                cols  = Math.floor(W / 20);
+                drops = Array(cols).fill(1);
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()+=<>?アイウエオカキクケコサシスセソ';
+
+            function draw() {
+                ctx.fillStyle = 'rgba(2,6,23,0.05)';
+                ctx.fillRect(0, 0, W, H);
+                ctx.font = '14px JetBrains Mono, monospace';
+                for (let i = 0; i < drops.length; i++) {
+                    const c = chars[Math.floor(Math.random() * chars.length)];
+                    const intensity = Math.random();
+                    if (intensity > 0.95) ctx.fillStyle = '#93c5fd';
+                    else if (intensity > 0.8) ctx.fillStyle = '#3b82f6';
+                    else ctx.fillStyle = '#1e3a5f';
+                    ctx.fillText(c, i * 20, drops[i] * 20);
+                    if (drops[i] * 20 > H && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                }
+            }
+            setInterval(draw, 55);
+        })();
+
+        // ── Typing animation ─────────────────────────────────────
+        (function() {
+            const lines = [
+                '> Initializing threat engine...',
+                '> Loading behavioral baselines...',
+                '> SSE stream established.',
+                '> 12 detection rules active.',
+                '> Awaiting authentication...',
+            ];
+            const el = document.getElementById('typingText');
+            let li = 0, ci = 0;
+
+            function typeNext() {
+                if (li >= lines.length) { li = 0; el.textContent = ''; }
+                if (ci < lines[li].length) {
+                    el.textContent += lines[li][ci++];
+                    setTimeout(typeNext, 45 + Math.random() * 30);
+                } else {
+                    setTimeout(() => {
+                        // erase
+                        function erase() {
+                            if (el.textContent.length > 0) {
+                                el.textContent = el.textContent.slice(0, -1);
+                                setTimeout(erase, 20);
+                            } else { li++; ci = 0; setTimeout(typeNext, 400); }
+                        }
+                        setTimeout(erase, 1200);
+                    }, 800);
+                }
+            }
+            setTimeout(typeNext, 600);
+        })();
+
+        // ── Login form ───────────────────────────────────────────
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type=submit]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+            btn.disabled = true;
+
+            const pin = document.getElementById('adminPin').value;
+            const success = await loginAdmin(pin);
+
+            if (success) {
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Access Granted';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                setTimeout(() => window.location.href = 'dashboard.html', 600);
+            } else {
+                btn.innerHTML = '<i class="fas fa-shield-halved me-2"></i>Authenticate & Enter';
+                btn.disabled = false;
+                document.getElementById('loginError').style.display = 'block';
+                setTimeout(() => document.getElementById('loginError').style.display = 'none', 4000);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+user_id,role,resource_accessed,timestamp
+u02,STUDENT,/marks,2026-01-01 11:00
+u02,STUDENT,/marks,2026-01-01 11:05
+u02,STUDENT,/marks,2026-01-01 11:10
+u02,STUDENT,/marks,2026-01-01 11:15
+u02,STUDENT,/marks,2026-01-01 11:20
+u02,STUDENT,/marks,2026-01-01 11:25
+u04,STAFF,/admin_panel,2026-01-01 12:00

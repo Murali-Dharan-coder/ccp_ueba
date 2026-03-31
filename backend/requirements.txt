@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+passlib[bcrypt]
+pyjwt
+reportlab
+pydantic
+python-multipart
+httpx
+pandas

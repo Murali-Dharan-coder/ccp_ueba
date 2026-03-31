@@ -7,19 +7,24 @@ import java.util.Set;
 @Service
 public class WifiDetectionService {
 
-    // Known public Wi-Fi names (demo list)
-    private static final Set<String> PUBLIC_WIFI_NAMES = Set.of(
-            "Public_WiFi",
-            "Free_WiFi",
-            "Railway_WiFi",
-            "Airport_Free_WiFi",
-            "Cafe_WiFi"
+    // Insecure Wi-Fi security types
+    private static final Set<String> INSECURE_WIFI_TYPES = Set.of(
+            "OPEN"  ,   // No password
+            "WEP"       // Weak encryption
     );
 
-    public boolean isPublicWifi(String wifiName) {
-        if (wifiName == null || wifiName.isEmpty()) {
-            return false; // assume wired / unknown is safe for demo
+    /**
+     * Returns true if Wi-Fi is insecure (open or weak encryption)
+     */
+    public boolean isInsecureWifi(String wifiSecurityType) {
+
+        if (wifiSecurityType == null || wifiSecurityType.isEmpty()) {
+            // Unknown security → treat as risky
+            return true;
         }
-        return PUBLIC_WIFI_NAMES.contains(wifiName);
+
+        return INSECURE_WIFI_TYPES.contains(
+                wifiSecurityType.toUpperCase()
+        );
     }
 }
